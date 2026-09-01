@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PORTFOLIO ARCHIVE CMS Prototype</title>
+<style>
+:root{
+  --bg:#f5f4ef; --paper:#fff; --ink:#161616; --muted:#77756d;
+  --line:#d9d7cf; --yellow:#f2ee26; --danger:#b53b3b; --ok:#1e7b52;
+  --max:1440px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,"Helvetica Neue","Noto Sans JP","Yu Gothic",sans-serif;letter-spacing:.02em}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
+img{display:block;width:100%}
+a{color:inherit;text-decoration:none}
+.site{width:min(calc(100% - 44px),var(--max));margin:auto}
+.topbar{min-height:82px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);gap:24px}
+.logo{font-size:18px;font-weight:900;letter-spacing:.12em}
+.logo i{font-style:normal;display:inline-grid;place-items:center;width:25px;height:25px;margin-left:6px;background:var(--yellow);border-radius:50%}
+.mode-switch{display:flex;gap:8px;align-items:center}
+.mode-btn{border:1px solid var(--line);background:transparent;border-radius:999px;padding:9px 14px;font-size:12px}
+.mode-btn.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.hero{padding:48px 0 38px;display:grid;grid-template-columns:1.15fr .85fr;gap:40px;align-items:end}
+.hero h1{font-size:clamp(40px,6.5vw,98px);line-height:.94;margin:0;letter-spacing:-.055em;font-weight:900}
+.hero h1 span{position:relative;z-index:0}
+.hero h1 span:after{content:"";position:absolute;height:.22em;left:0;right:0;bottom:.06em;background:var(--yellow);z-index:-1}
+.hero-copy{color:var(--muted);max-width:520px;justify-self:end;font-size:13px;line-height:1.9}
+.notice{margin:18px 0 0;padding:12px 14px;border:1px dashed #b8b6ae;background:#fffbe7;font-size:12px;line-height:1.6}
+.toolbar{display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center;padding:17px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.search{display:flex;align-items:center;gap:12px}
+.search input{width:min(100%,420px);border:0;border-bottom:1px solid #aaa89f;background:transparent;padding:10px 2px;outline:none;font-size:13px}
+.filterset{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.filter{border:1px solid var(--line);background:transparent;border-radius:999px;padding:8px 13px;font-size:11px}
+.filter.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.content{display:grid;grid-template-columns:210px 1fr;gap:38px;padding:38px 0 80px}
+.sidebar{position:sticky;top:18px;align-self:start}
+.side-title{font-size:11px;color:var(--muted);margin-bottom:15px;letter-spacing:.12em}
+.side-list{display:grid;border-top:1px solid var(--line)}
+.side-item{display:flex;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--line);font-size:12px}
+.side-item b{font-weight:500}
+.side-item span{color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:36px 20px}
+.card{min-width:0}
+.thumb{background:#deddd7;overflow:hidden;aspect-ratio:5/4;cursor:zoom-in;border:1px solid rgba(0,0,0,.06)}
+.thumb img{height:100%;object-fit:cover;transition:transform .35s ease}
+.card:hover .thumb img{transform:scale(1.02)}
+.meta{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:14px 0 11px;border-bottom:1px solid var(--line)}
+.meta h2{margin:0 0 5px;font-size:14px;line-height:1.5}
+.meta small{color:var(--muted);font-size:10px}
+.index{flex:0 0 auto;width:31px;height:31px;display:grid;place-items:center;background:var(--yellow);border-radius:50%;font-weight:900;font-size:11px}
+.memo{padding-top:10px;color:#555;font-size:12px;line-height:1.7;white-space:pre-wrap}
+.empty{grid-column:1/-1;padding:60px 20px;text-align:center;border:1px dashed var(--line);color:var(--muted)}
+.footer{padding:32px 0 50px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;color:var(--muted);font-size:10px}
+
+/* Admin */
+.admin-wrap{display:none;padding:34px 0 80px}
+.admin-wrap.active{display:block}
+.public-wrap.hidden{display:none}
+.admin-grid{display:grid;grid-template-columns:390px 1fr;gap:28px;align-items:start}
+.panel{background:rgba(255,255,255,.58);border:1px solid var(--line);padding:20px}
+.panel h2,.panel h3{margin-top:0}
+.form-row{display:grid;gap:7px;margin-bottom:14px}
+.form-row label{font-size:11px;color:var(--muted)}
+.form-row input,.form-row textarea,.form-row select{width:100%;border:1px solid var(--line);background:#fff;padding:11px 12px;outline:none}
+.form-row textarea{min-height:110px;resize:vertical;line-height:1.6}
+.checkrow{display:flex;align-items:center;gap:8px;font-size:12px;margin:8px 0 16px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.primary{border:1px solid var(--ink);background:var(--ink);color:#fff;padding:11px 15px}
+.secondary{border:1px solid var(--line);background:#fff;padding:11px 15px}
+.danger{border:1px solid #e4bcbc;background:#fff5f5;color:var(--danger);padding:9px 12px}
+.admin-list{display:grid;gap:12px}
+.admin-item{display:grid;grid-template-columns:120px 1fr auto;gap:14px;align-items:center;background:#fff;border:1px solid var(--line);padding:10px}
+.admin-item img{width:120px;height:96px;object-fit:cover}
+.admin-item h4{margin:0 0 6px;font-size:13px}
+.admin-item p{margin:0;color:var(--muted);font-size:11px}
+.item-actions{display:grid;gap:6px}
+.small{padding:8px 10px;font-size:11px;border:1px solid var(--line);background:#fff}
+.drag{cursor:grab}
+.admin-status{font-size:11px;color:var(--muted);margin-top:10px}
+.preview-img{display:none;margin-top:8px;width:100%;aspect-ratio:5/4;object-fit:cover;border:1px solid var(--line)}
+.preview-img.show{display:block}
+.help{font-size:11px;color:var(--muted);line-height:1.6}
+.badge{display:inline-block;padding:3px 7px;border-radius:999px;font-size:10px;background:#eee}
+.badge.pub{background:#e8f6ef;color:var(--ok)}
+.badge.draft{background:#f3ecec;color:#8d5555}
+.modal{display:none;position:fixed;inset:0;z-index:100;background:rgba(20,20,20,.92);align-items:center;justify-content:center;padding:30px}
+.modal.open{display:flex}
+.modal img{max-width:min(1100px,92vw);max-height:88vh;width:auto;height:auto;object-fit:contain}
+.close{position:fixed;right:22px;top:18px;width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,.32);color:#fff;background:rgba(255,255,255,.08);font-size:22px}
+
+@media(max-width:1100px){
+  .content{grid-template-columns:160px 1fr}
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .admin-grid{grid-template-columns:1fr}
+}
+@media(max-width:760px){
+  .site{width:min(calc(100% - 24px),var(--max))}
+  .topbar{min-height:66px;align-items:flex-start;padding:14px 0}
+  .mode-switch{flex-wrap:wrap;justify-content:flex-end}
+  .hero{grid-template-columns:1fr;padding:38px 0 28px}
+  .hero-copy{justify-self:start}
+  .toolbar{grid-template-columns:1fr}
+  .filterset{justify-content:flex-start}
+  .content{grid-template-columns:1fr;padding-top:28px}
+  .sidebar{display:none}
+  .grid{grid-template-columns:1fr}
+  .admin-item{grid-template-columns:90px 1fr}
+  .admin-item img{width:90px;height:72px}
+  .item-actions{grid-column:1/-1;grid-template-columns:repeat(4,1fr)}
+}
+</style>
+</head>
+<body>
+<div class="site">
+  <header class="topbar">
+    <a class="logo" href="#public">PORTFOLIO ARCHIVE<i>+</i></a>
+    <div class="mode-switch">
+      <button class="mode-btn" id="publicBtn">公開サイト</button>
+      <button class="mode-btn" id="adminBtn">管理画面</button>
+    </div>
+  </header>
+
+  <div class="public-wrap" id="publicWrap">
+    <section class="hero">
+      <h1>SELECTED<br><span>WORKS.</span></h1>
+      <div class="hero-copy">
+        求人広告・メインビジュアルを中心とした制作実績です。<br>
+        管理画面から作品を追加・編集・削除・並び替えできます。
+      </div>
+    </section>
+
+    <div class="toolbar">
+      <label class="search"><span>⌕</span><input id="searchInput" type="search" placeholder="作品名・テイスト・備考から検索"></label>
+      <div class="filterset" id="filters">
+        <button class="filter active" data-filter="all">すべて</button>
+      </div>
+    </div>
+
+    <main class="content">
+      <aside class="sidebar">
+        <div class="side-title">CATEGORY</div>
+        <div class="side-list" id="categoryList"></div>
+      </aside>
+      <section class="grid" id="workGrid"></section>
+    </main>
+  </div>
+
+  <section class="admin-wrap" id="adminWrap">
+    <div class="hero" style="padding-bottom:24px">
+      <h1 style="font-size:clamp(34px,5vw,66px)">ADMIN<br><span>WORKS.</span></h1>
+      <div class="hero-copy">
+        新しい作品の追加、既存作品の編集、公開・非公開、並び替えができます。
+        <div class="notice">これはプロトタイプ版です。データと追加画像はこのブラウザ内に保存されます。公開運用時はSupabase等のデータベースに接続します。</div>
+      </div>
+    </div>
+
+    <div class="admin-grid">
+      <div class="panel">
+        <h2 id="formTitle">作品を追加</h2>
+        <form id="workForm">
+          <input type="hidden" id="editId">
+          <div class="form-row">
+            <label>作品画像</label>
+            <input type="file" id="imageInput" accept="image/*">
+            <div class="help">追加画像は自動で縮小・圧縮して保存します。</div>
+            <img id="imagePreview" class="preview-img" alt="プレビュー">
+          </div>
+          <div class="form-row">
+            <label>作品名</label>
+            <input type="text" id="titleInput" placeholder="例：Luxury Recruitment Visual" required>
+          </div>
+          <div class="form-row">
+            <label>カテゴリー</label>
+            <input type="text" id="categoryInput" placeholder="例：高級感">
+          </div>
+          <div class="form-row">
+            <label>タグ</label>
+            <input type="text" id="tagsInput" placeholder="例：GOLD, RECRUITING, 高級感">
+          </div>
+          <div class="form-row">
+            <label>備考</label>
+            <textarea id="noteInput" placeholder="制作意図、ターゲット、使用媒体、修正内容など"></textarea>
+          </div>
+          <label class="checkrow"><input type="checkbox" id="publishedInput" checked> 公開する</label>
+          <div class="actions">
+            <button type="submit" class="primary" id="saveBtn">保存する</button>
+            <button type="button" class="secondary" id="cancelEdit" style="display:none">編集をやめる</button>
+          </div>
+          <div class="admin-status" id="formStatus"></div>
+        </form>
+      </div>
+
+      <div class="panel">
+        <h3>登録作品</h3>
+        <p class="help">「↑」「↓」で掲載順を変更できます。編集内容は公開サイト側に即時反映されます。</p>
+        <div class="admin-list" id="adminList"></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <span>© 2026 PORTFOLIO ARCHIVE</span>
+    <span>CMS Prototype / Local Browser Storage</span>
+  </footer>
+</div>
+
+<div class="modal" id="modal" aria-hidden="true">
+  <button class="close" id="closeBtn">×</button>
+  <img id="modalImg" alt="拡大画像">
+</div>
+
+<script>
+const STORAGE_KEY = 'portfolio-cms-v2-data';
+
+const defaults = [
+  {id:'w1', title:'Girly Recruitment Visual', category:'かわいい', tags:['CUTE','PINK','RECRUITING'], note:'', published:true, image:'assets/work-01.jpg'},
+  {id:'w2', title:'Luxury Recruitment Visual', category:'高級感', tags:['LUXURY','GOLD','RECRUITING'], note:'', published:true, image:'assets/work-02.jpg'},
+  {id:'w3', title:'Neon Recruitment Visual', category:'ネオン', tags:['NEON','BLUE','RECRUITING'], note:'', published:true, image:'assets/work-03.jpg'}
+];
+
+let works = loadWorks();
+let activeFilter = 'all';
+
+function loadWorks(){
+  try{
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    return Array.isArray(saved) && saved.length ? saved : structuredClone(defaults);
+  }catch(e){ return structuredClone(defaults); }
+}
+function saveWorks(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(works));
+  renderAll();
+}
+
+function esc(s=''){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function uid(){ return 'w' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+function renderFilters(){
+  const cats = [...new Set(works.filter(w=>w.published).map(w=>w.category).filter(Boolean))];
+  const filters = document.getElementById('filters');
+  filters.innerHTML = '<button class="filter'+(activeFilter==='all'?' active':'')+'" data-filter="all">すべて</button>' +
+    cats.map(c=>`<button class="filter${activeFilter===c?' active':''}" data-filter="${esc(c)}">${esc(c)}</button>`).join('');
+  filters.querySelectorAll('.filter').forEach(btn=>{
+    btn.addEventListener('click',()=>{ activeFilter=btn.dataset.filter; renderAll(); });
+  });
+
+  const list = document.getElementById('categoryList');
+  const pub = works.filter(w=>w.published);
+  list.innerHTML = `<div class="side-item"><b>ALL WORKS</b><span>${String(pub.length).padStart(2,'0')}</span></div>` +
+    cats.map(c=>{
+      const n=pub.filter(w=>w.category===c).length;
+      return `<div class="side-item"><b>${esc(c.toUpperCase())}</b><span>${String(n).padStart(2,'0')}</span></div>`;
+    }).join('');
+}
+
+function renderPublic(){
+  const q = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+  const grid = document.getElementById('workGrid');
+  const filtered = works.filter(w=>{
+    if(!w.published) return false;
+    if(activeFilter!=='all' && w.category!==activeFilter) return false;
+    const hay=[w.title,w.category,(w.tags||[]).join(' '),w.note].join(' ').toLowerCase();
+    return !q || hay.includes(q);
+  });
+  if(!filtered.length){
+    grid.innerHTML='<div class="empty">該当する作品がありません。</div>';
+    return;
+  }
+  grid.innerHTML = filtered.map((w,i)=>`
+    <article class="card">
+      <div class="thumb" data-img="${esc(w.image)}"><img src="${esc(w.image)}" alt="${esc(w.title)}"></div>
+      <div class="meta">
+        <div>
+          <h2>${esc(w.title)}</h2>
+          <small>${esc([w.category,...(w.tags||[])].filter(Boolean).join(' / '))}</small>
+        </div>
+        <span class="index">${String(i+1).padStart(2,'0')}</span>
+      </div>
+      ${w.note ? `<div class="memo">${esc(w.note)}</div>` : ''}
+    </article>
+  `).join('');
+  grid.querySelectorAll('.thumb').forEach(el=>{
+    el.addEventListener('click',()=>openModal(el.dataset.img));
+  });
+}
+
+function renderAdmin(){
+  const list = document.getElementById('adminList');
+  if(!works.length){
+    list.innerHTML='<div class="empty">作品がありません。</div>';
+    return;
+  }
+  list.innerHTML = works.map((w,i)=>`
+    <div class="admin-item">
+      <img src="${esc(w.image)}" alt="">
+      <div>
+        <h4>${esc(w.title)} <span class="badge ${w.published?'pub':'draft'}">${w.published?'公開':'非公開'}</span></h4>
+        <p>${esc(w.category || 'カテゴリ未設定')} / ${esc((w.tags||[]).join(', '))}</p>
+      </div>
+      <div class="item-actions">
+        <button class="small" data-action="edit" data-id="${w.id}">編集</button>
+        <button class="small" data-action="up" data-id="${w.id}" ${i===0?'disabled':''}>↑</button>
+        <button class="small" data-action="down" data-id="${w.id}" ${i===works.length-1?'disabled':''}>↓</button>
+        <button class="danger" data-action="delete" data-id="${w.id}">削除</button>
+      </div>
+    </div>
+  `).join('');
+  list.querySelectorAll('button[data-action]').forEach(btn=>{
+    btn.addEventListener('click',()=>handleAdminAction(btn.dataset.action, btn.dataset.id));
+  });
+}
+
+function renderAll(){ renderFilters(); renderPublic(); renderAdmin(); }
+
+function handleAdminAction(action,id){
+  const idx=works.findIndex(w=>w.id===id);
+  if(idx<0) return;
+  if(action==='edit'){ startEdit(works[idx]); return; }
+  if(action==='delete'){
+    if(confirm('この作品を削除しますか？')){
+      works.splice(idx,1); saveWorks();
+    }
+    return;
+  }
+  if(action==='up' && idx>0){
+    [works[idx-1],works[idx]]=[works[idx],works[idx-1]]; saveWorks(); return;
+  }
+  if(action==='down' && idx<works.length-1){
+    [works[idx+1],works[idx]]=[works[idx],works[idx+1]]; saveWorks(); return;
+  }
+}
+
+const form = document.getElementById('workForm');
+const editId = document.getElementById('editId');
+const imageInput = document.getElementById('imageInput');
+const imagePreview = document.getElementById('imagePreview');
+let pendingImage = '';
+
+imageInput.addEventListener('change', async ()=>{
+  const file = imageInput.files && imageInput.files[0];
+  if(!file) return;
+  pendingImage = await compressImage(file);
+  imagePreview.src = pendingImage;
+  imagePreview.classList.add('show');
+});
+
+function compressImage(file){
+  return new Promise((resolve,reject)=>{
+    const img=new Image();
+    const reader=new FileReader();
+    reader.onload=e=>{
+      img.onload=()=>{
+        const max=1600;
+        let w=img.width,h=img.height;
+        if(Math.max(w,h)>max){
+          const r=max/Math.max(w,h); w=Math.round(w*r); h=Math.round(h*r);
+        }
+        const c=document.createElement('canvas'); c.width=w; c.height=h;
+        const ctx=c.getContext('2d'); ctx.drawImage(img,0,0,w,h);
+        resolve(c.toDataURL('image/jpeg',.82));
+      };
+      img.onerror=reject;
+      img.src=e.target.result;
+    };
+    reader.onerror=reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+form.addEventListener('submit',e=>{
+  e.preventDefault();
+  const existing = works.find(w=>w.id===editId.value);
+  const image = pendingImage || (existing && existing.image);
+  if(!image){
+    setStatus('画像を選択してください。'); return;
+  }
+  const data={
+    id: existing ? existing.id : uid(),
+    title: document.getElementById('titleInput').value.trim(),
+    category: document.getElementById('categoryInput').value.trim(),
+    tags: document.getElementById('tagsInput').value.split(',').map(s=>s.trim()).filter(Boolean),
+    note: document.getElementById('noteInput').value.trim(),
+    published: document.getElementById('publishedInput').checked,
+    image
+  };
+  if(!data.title){ setStatus('作品名を入力してください。'); return; }
+
+  if(existing){
+    const idx=works.findIndex(w=>w.id===existing.id); works[idx]=data;
+  }else{
+    works.unshift(data);
+  }
+  try{
+    saveWorks();
+    setStatus(existing?'更新しました。':'追加しました。');
+    resetForm();
+  }catch(err){
+    setStatus('保存容量を超えました。画像サイズを小さくするか、公開版ではデータベース保存に切り替えてください。');
+  }
+});
+
+function startEdit(w){
+  location.hash='admin';
+  editId.value=w.id;
+  document.getElementById('titleInput').value=w.title||'';
+  document.getElementById('categoryInput').value=w.category||'';
+  document.getElementById('tagsInput').value=(w.tags||[]).join(', ');
+  document.getElementById('noteInput').value=w.note||'';
+  document.getElementById('publishedInput').checked=!!w.published;
+  pendingImage='';
+  imageInput.value='';
+  imagePreview.src=w.image;
+  imagePreview.classList.add('show');
+  document.getElementById('formTitle').textContent='作品を編集';
+  document.getElementById('saveBtn').textContent='更新する';
+  document.getElementById('cancelEdit').style.display='inline-block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function resetForm(){
+  editId.value=''; pendingImage=''; form.reset();
+  document.getElementById('publishedInput').checked=true;
+  imagePreview.src=''; imagePreview.classList.remove('show');
+  document.getElementById('formTitle').textContent='作品を追加';
+  document.getElementById('saveBtn').textContent='保存する';
+  document.getElementById('cancelEdit').style.display='none';
+}
+document.getElementById('cancelEdit').addEventListener('click',resetForm);
+function setStatus(t){ document.getElementById('formStatus').textContent=t; }
+
+document.getElementById('searchInput').addEventListener('input',renderPublic);
+
+function setMode(){
+  const admin = location.hash === '#admin';
+  document.getElementById('adminWrap').classList.toggle('active',admin);
+  document.getElementById('publicWrap').classList.toggle('hidden',admin);
+  document.getElementById('adminBtn').classList.toggle('active',admin);
+  document.getElementById('publicBtn').classList.toggle('active',!admin);
+}
+window.addEventListener('hashchange',setMode);
+document.getElementById('adminBtn').addEventListener('click',()=>location.hash='admin');
+document.getElementById('publicBtn').addEventListener('click',()=>location.hash='public');
+
+const modal=document.getElementById('modal'), modalImg=document.getElementById('modalImg');
+function openModal(src){ modalImg.src=src; modal.classList.add('open'); }
+function closeModal(){ modal.classList.remove('open'); }
+document.getElementById('closeBtn').addEventListener('click',closeModal);
+modal.addEventListener('click',e=>{if(e.target===modal)closeModal()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+
+renderAll(); setMode();
+</script>
+</body>
+</html>
